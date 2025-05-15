@@ -1,10 +1,7 @@
-Redmine Plugin: Advanced Roadmap vv
+Redmine Plugin: Advanced Roadmap v3
 ===========================
 
-This plugin was a fork of Redmine Plugin: [advanced roadmap](https://redmine.ociotec.com/projects/advanced-roadmap), when it was not developed.
-
-Since original plugin is back on rails, this plugin **won't be maintained anymore.**
-
+This plugin was a fork of Redmine Plugin: [advanced roadmap](https://redmine.ociotec.com/projects/advanced-roadmap)
 ScreenShot
 ==========
 
@@ -14,7 +11,7 @@ ScreenShot
 Features
 ========
 
-The Advanced Roadmap v2 plugin for Redmine is a plugin that allows to:
+The Advanced Roadmap v3 plugin for Redmine is a plugin that allows to:
 
 1. Show more information into the Roadmap view:
   *  A total for the roadmap is displayed, so you can easily check the whole project status.
@@ -25,25 +22,10 @@ The Advanced Roadmap v2 plugin for Redmine is a plugin that allows to:
   * Milestones are edited on the project Settings tab (create, edit (associate versions to them) and delete).
   * Milestone information is shown into the Roadmap view, above the Version list, into a Milestone list. When a milestone view is clicked a view similar to Roadmap is shown, but instead of showing the project versions list, a list of the milestone versions list is shown.
 
-Installation
-============
 
-Steps:
+Notes
+=====
 
-1.  Download last version and cd to Redmine root folder 
-2.  Create destination directory `mkdir plugins/advanced_roadmap_v2`
-3.  Uncompress in this folder `tar xvzf /path/to/advanced_roadmap_vx.y.z.tar.gz -C plugins/advanced_roadmap_v2`
-4.  Into the Redmine root folder migrate plugins: `RAILS_ENV=production bundle exec rake redmine:plugins:migrate`
-5.  Option: Install dependency required for pretty graph: `apt-get install ruby-rmagick`
-6.  Restart your Redmine.
-
-
-Uninstall
-=========
-
-Steps: 
-
-1. Into the Redmine root folder migrate plugins: `RAILS_ENV=production bundle exec rake redmine:plugins:migrate NAME=advanced_roadmap_v2 VERSION=0`
-2. Delete plugin directory: `rm -rf plugins/advanced_roadmap_v2`
-
+I have made this compatible with Redmine 5.1.x
+Have tested this in 5.1.3 production environment
 
