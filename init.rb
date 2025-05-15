@@ -23,13 +23,13 @@ require_dependency File.dirname(__FILE__) + '/lib/advanced_roadmap/view_hooks'
 
 Redmine::Plugin.register :advanced_roadmap do
   name 'Advanced roadmap & milestones plugin'
-  url 'https://redmine.ociotec.com/projects/advanced-roadmap'
-  author 'Emilio González Montaña'
-  author_url 'http://ociotec.com'
+  url 'https://github.com/Arean82/advanced_roadmap'
+  author 'Arean Narrayan'
+  author_url 'https://github.com/Arean82/advanced_roadmap'
   description 'This is a plugin for Redmine that is used to show more information inside the Roadmap page and implements the milestones featuring.'
-  version '0.13.0'
+  version '0.14.0'
   permission :manage_milestones, {:milestones => [:new, :create, :edit, :update, :destroy]}
-  requires_redmine :version_or_higher => '4.0.0'
+  requires_redmine :version_or_higher => '5.0.0'
 
   project_module :issue_tracking do
     permission :view_issue_estimated_hours, {}
