@@ -1,3 +1,4 @@
+# encoding: UTF-8
 
 class ChangeMilestonesDates < ActiveRecord::Migration[4.2]
 #class ChangeMilestonesDates < ActiveRecord::Migration
