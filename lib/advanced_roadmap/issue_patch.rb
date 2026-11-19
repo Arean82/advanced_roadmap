@@ -1,8 +1,5 @@
 # encoding: UTF-8
 
-
-require_dependency 'issue'
-
 module AdvancedRoadmap
   module IssuePatch
     def self.included(base)

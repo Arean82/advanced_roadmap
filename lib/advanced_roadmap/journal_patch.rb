@@ -1,7 +1,5 @@
 # encoding: UTF-8
 
-require_dependency 'issue'
-
 module AdvancedRoadmap
   module JournalPatch
     def self.included(base)
@@ -13,7 +11,7 @@ module AdvancedRoadmap
             if detail.property == 'cf'
               detail.custom_field && detail.custom_field.visible_by?(project, user)
             elsif detail.property == 'relation'
-              Issue.find_by_id(detail.value || detail.old_value).try(:visible?, user)
+              Issue.find_by(id: detail.value || detail.old_value).try(:visible?, user)
             elsif detail.property == 'attr' && detail.prop_key == 'estimated_hours'
               user.allowed_to?(:view_issue_estimated_hours, project)
             else

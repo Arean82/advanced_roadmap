@@ -1,8 +1,5 @@
 # encoding: UTF-8
 
-
-require_dependency 'projects_helper'
-
 module AdvancedRoadmap
   module ProjectsHelperPatch
     def self.included(base)

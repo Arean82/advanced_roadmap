@@ -37,7 +37,7 @@
             <td width="340px" class="total-hours"><%= "#{l_hours(version_speed_rest_hours)} / #{l_days(version_speed_rest_hours / 8.0)} / #{l_weeks(version_speed_rest_hours / 40.0)}" %></td>
           </tr>
         <%- end -%>
-        <%- if !(custom_field = CustomField.find_by_id(AdvancedRoadmap::Setting.parallel_effort_custom_field)).nil? and
+        <%- if !(custom_field = CustomField.find_by(id: AdvancedRoadmap::Setting.parallel_effort_custom_field)).nil? and
                custom_field.field_format == 'float' and version_parallel_rest_hours != version_rest_hours -%>
           <tr>
             <td width="310px" align="right"><%= l(:label_roadmap_due_in, '') %> (<%= custom_field.name %>)</td>

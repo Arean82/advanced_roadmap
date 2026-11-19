@@ -1,8 +1,5 @@
 # encoding: UTF-8
 
-
-require_dependency 'versions_controller'
-
 module AdvancedRoadmap
   module VersionsControllerPatch
     def self.included(base)

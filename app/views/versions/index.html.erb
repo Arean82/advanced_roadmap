@@ -3,18 +3,61 @@
 <% if @versions.empty? %>
 <p class="nodata"><%= l(:label_no_data) %></p>
 <% else %>
+
+<% if @project && @project.milestones.any? %>
+<div class="milestone-filter-bar" style="background:#f6f8fa;border:1px solid #e1e4e8;border-radius:6px;padding:8px 12px;margin-bottom:15px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+  <span style="font-weight:600;font-size:12px;color:#444;"><%= label_milestone_plural %>:</span>
+  <a href="javascript:void(0)" class="milestone-filter-pill active" onclick="filterRoadmapMilestone('all', this)" style="padding:3px 10px;border-radius:12px;background:#0366d6;color:#fff;font-size:12px;text-decoration:none;">All</a>
+  <% @project.milestones.sort.each do |m| %>
+    <% version_ids = m.versions.map(&:id).join(',') %>
+    <a href="javascript:void(0)" class="milestone-filter-pill" data-version-ids="<%= version_ids %>" onclick="filterRoadmapMilestone('<%= m.id %>', this)" style="padding:3px 10px;border-radius:12px;background:#e1e4e8;color:#333;font-size:12px;text-decoration:none;">
+      <%= h(m.name) %>
+    </a>
+  <% end %>
+</div>
+
+<script>
+function filterRoadmapMilestone(milestoneId, el) {
+  var pills = document.querySelectorAll('.milestone-filter-pill');
+  pills.forEach(function(p) {
+    p.style.background = '#e1e4e8';
+    p.style.color = '#333';
+  });
+  el.style.background = '#0366d6';
+  el.style.color = '#fff';
+
+  var versionBlocks = document.querySelectorAll('#roadmap .roadmap-version-block');
+  if (milestoneId === 'all') {
+    versionBlocks.forEach(function(b) { b.style.display = ''; });
+    return;
+  }
+  var allowedIds = (el.getAttribute('data-version-ids') || '').split(',');
+  versionBlocks.forEach(function(b) {
+    var vId = b.getAttribute('data-version-id');
+    if (allowedIds.indexOf(vId) !== -1) {
+      b.style.display = '';
+    } else {
+      b.style.display = 'none';
+    }
+  });
+}
+</script>
+<% end %>
+
 <div id="roadmap">
 <%= render(:partial => 'versions/total', :locals => {:project => @project, :totals => @totals, :versions => @versions}) %>
 <% @versions.each do |version| %>
-  <h3 class="version"><%= tag 'a', :name => version.name %><%= link_to_version version %></h3>
-  <%- if Redmine::VERSION::STRING < '3.4.0' -%>
-    <%= render :partial => 'versions/info', :locals => {:version => version, :issues => version.sorted_fixed_issues(:trackers => @selected_tracker_ids), :totals => @totals} %>
-  <%- else -%>
-    <%= form_tag({}, :data => {:cm_url => issues_context_menu_path}) do -%>
+  <div class="roadmap-version-block" data-version-id="<%= version.id %>">
+    <h3 class="version"><%= tag 'a', :name => version.name %><%= link_to_version version %></h3>
+    <%- if Redmine::VERSION::STRING < '3.4.0' -%>
       <%= render :partial => 'versions/info', :locals => {:version => version, :issues => version.sorted_fixed_issues(:trackers => @selected_tracker_ids), :totals => @totals} %>
-    <% end %>
-  <%- end -%>
-  <%= call_hook :view_projects_roadmap_version_bottom, :version => version %>
+    <%- else -%>
+      <%= form_tag({}, :data => {:cm_url => issues_context_menu_path}) do -%>
+        <%= render :partial => 'versions/info', :locals => {:version => version, :issues => version.sorted_fixed_issues(:trackers => @selected_tracker_ids), :totals => @totals} %>
+      <% end %>
+    <%- end -%>
+    <%= call_hook :view_projects_roadmap_version_bottom, :version => version %>
+  </div>
 <% end %>
 </div>
 <% end %>
@@ -28,17 +71,23 @@
 <% end %>
 <br />
 <label for="completed"><%= check_box_tag 'completed', 1, params[:completed] %> <%= l(:label_show_completed_versions) %></label>
-<% if @project.descendants.active.any? %>
+<% if @project && @project.descendants.active.any? %>
 	<%= hidden_field_tag 'with_subprojects', 0 %>
   <br /><label><%= check_box_tag 'with_subprojects', 1, @with_subprojects %> <%=l(:label_subproject_plural)%></label>
 <% end %>
 <p><%= submit_tag l(:button_apply), :class => 'button-small', :name => nil %></p>
 <% end %>
 
+<% if @project && @project.milestones.any? %>
 <h3><%= label_milestone_plural %></h3>
 <% @project.milestones.sort.each do |milestone| %>
-<%= link_to(milestone.name, :controller => :milestones, :action => :show, :id => milestone.id) %><br />
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+  <%= link_to(milestone.name, :controller => :milestones, :action => :show, :id => milestone.id) %>
+  <%= milestone.status_badge %>
+</div>
 <% end %>
+<% end %>
+
 <h3><%= l(:label_version_plural) %></h3>
 <% @versions.each do |version| %>
 <%= link_to format_version_name(version), "##{version.name}" %><br />
@@ -46,11 +95,3 @@
 <% end %>
 
 <% html_title(l(:label_roadmap)) %>
-
-<%- if Redmine::VERSION::STRING < '3.4.0' -%>
-  <%= context_menu issues_context_menu_path %>
-<%- else -%>
-  <%= context_menu %>
-<%- end -%>
-
-<%= render :partial => 'common/advanced_roadmap_footer' %>

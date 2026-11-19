@@ -1,8 +1,5 @@
 # encoding: UTF-8
 
-
-require_dependency 'version'
-
 module AdvancedRoadmap
   module VersionPatch
     def self.included(base)
@@ -117,7 +114,7 @@ module AdvancedRoadmap
   
         def parallel_factor
           factor = 1.0
-          if !(custom_field = CustomField.find_by_id(AdvancedRoadmap::Setting.parallel_effort_custom_field)).nil? and
+          if !(custom_field = CustomField.find_by(id: AdvancedRoadmap::Setting.parallel_effort_custom_field)).nil? and
              custom_field.field_format == 'float'
             if !(custom_value = CustomValue.where(:customized_type => 'Version', :customized_id => id,
                                                   :custom_field_id => custom_field.id).first).nil?

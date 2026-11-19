@@ -1,8 +1,5 @@
 # encoding: UTF-8
 
-
-require_dependency 'projects_controller'
-
 module AdvancedRoadmap
   module ProjectPatch
     def self.included(base)

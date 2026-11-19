@@ -1,8 +1,5 @@
 # encoding: UTF-8
 
-
-require_dependency 'query'
-
 module AdvancedRoadmap
   module QueryPatch
     def self.included(base)
@@ -11,24 +8,11 @@ module AdvancedRoadmap
         # Returns the milestones
         # Valid options are :conditions
         def milestones(options = {})
-          Milestone
-              .joins(:project)
-              .includes(:project)
-              .where(Query.merge_conditions(project_statement, options[:conditions]))
+          scope = Milestone.joins(:project).includes(:project).where(project_statement)
+          scope = scope.where(options[:conditions]) if options[:conditions].present?
+          scope
         rescue ::ActiveRecord::StatementInvalid => e
           raise StatementInvalid.new(e.message)
-        end
-
-        # Deprecated method from Rails 2.3.X.
-        def self.merge_conditions(*conditions)
-          segments = []
-          conditions.each do |condition|
-            unless condition.blank?
-              sql = sanitize_sql(condition)
-              segments << sql unless sql.blank?
-            end
-          end
-          "(#{segments.join(') AND (')})" unless segments.empty?
         end
 
         alias_method :available_totalable_columns_without_advanced_roadmap, :available_totalable_columns

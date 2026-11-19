@@ -5,3 +5,4 @@ resources :projects do
   resources :milestones, :only => [:new, :create, :index]
 end
 resources :milestones, :only => [:show, :edit, :update, :destroy]
+get "milestones", :to => "milestones#index"

@@ -1,7 +1,5 @@
 # encoding: UTF-8
 
-require_dependency 'calendars_controller'
-
 module AdvancedRoadmap
   module CalendarsControllerPatch
     def self.included(base)
@@ -13,37 +11,26 @@ module AdvancedRoadmap
           yield
 
           milestones = []
-          @query.milestones.where('milestones.milestone_effective_date' =>
-                                  @calendar.startdt..@calendar.enddt).each do |milestone|
-            milestones << {
-              name: milestone.name,
-              url: url_for(controller: :milestones, action: :show, id: milestone.id),
-              week: milestone.milestone_effective_date.cweek,
-              day: milestone.milestone_effective_date.day
-            }
+          if @query.respond_to?(:milestones) && @calendar
+            @query.milestones.where('milestones.milestone_effective_date' =>
+                                    @calendar.startdt..@calendar.enddt).each do |milestone|
+              milestones << {
+                name: milestone.name,
+                url: url_for(controller: :milestones, action: :show, id: milestone.id),
+                week: milestone.milestone_effective_date.cweek,
+                day: milestone.milestone_effective_date.day
+              }
+            end
           end
 
-          plugin_views_path = File.expand_path('../../app/views', __dir__)
-          lookup_context = ActionView::LookupContext.new([plugin_views_path])
-          view = ActionView::Base.with_empty_template_cache.new(
-            lookup_context,
-            {}, # assigns
-            self # controller
-          )
-          view.class_eval do
-            include ApplicationHelper
-            include Rails.application.routes.url_helpers
-            include ActionView::Helpers
-          end
-
-          response.body += view.render(
+          rendered_content = render_to_string(
             partial: 'hooks/calendars/milestones',
             locals: { milestones: milestones }
           )
+          response.body = "#{response.body}#{rendered_content}"
         end
 
       end
     end
   end
 end
-

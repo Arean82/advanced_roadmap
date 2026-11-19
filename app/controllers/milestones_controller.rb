@@ -1,20 +1,19 @@
 # encoding: UTF-8
 
-
-require 'gruff/pie' if Object.const_defined?(:Magick)
+require 'csv'
 
 class MilestonesController < ApplicationController
   
   menu_item :roadmap
-  model_object Milestone
+  self.model_object = Milestone
 
   before_action :find_model_object,
                 :only => [:show, :edit, :update, :destroy]
   before_action :find_project_from_association,
                 :only => [:show, :edit, :update, :destroy]
   before_action :find_project_by_project_id,
-                :only => [:new, :create]
-  before_action :authorize, :except => [:show, :total_graph]
+                :only => [:new, :create, :index]
+  before_action :authorize, :except => [:show, :total_graph, :index]
 
   helper :custom_fields
   helper :projects
@@ -22,6 +21,39 @@ class MilestonesController < ApplicationController
   include CustomFieldsHelper
   include ProjectsHelper
   include VersionsHelper
+
+  def index
+    @milestones = @project ? @project.milestones.sort : Milestone.all.sort
+
+    respond_to do |format|
+      format.html { redirect_to project_path(@project, :tab => 'settings') if @project }
+      format.json do
+        render :json => {
+          :milestones => @milestones.map do |m|
+            totals = Version.calculate_totals(m.versions)
+            {
+              :id => m.id,
+              :name => m.name,
+              :description => m.description,
+              :project_id => m.project_id,
+              :milestone_effective_date => m.milestone_effective_date,
+              :completed => m.completed?,
+              :overdue => m.overdue?,
+              :at_risk => m.at_risk?(totals),
+              :versions_count => m.versions.count,
+              :totals => {
+                :estimated_hours => totals[:estimated_hours],
+                :spent_hours => totals[:spent_hours],
+                :rest_hours => totals[:rest_hours],
+                :parallel_rest_hours => totals[:parallel_rest_hours],
+                :completed_pourcent => totals[:completed_pourcent]
+              }
+            }
+          end
+        }
+      end
+    end
+  end
 
   def show
     projects = {}
@@ -35,6 +67,41 @@ class MilestonesController < ApplicationController
     Version.sort_versions(@milestone.versions)
     @more_than_one_project = (projects.length > 1)
     @totals = Version.calculate_totals(@milestone.versions)
+
+    respond_to do |format|
+      format.html
+      format.json do
+        render :json => {
+          :milestone => {
+            :id => @milestone.id,
+            :name => @milestone.name,
+            :description => @milestone.description,
+            :milestone_effective_date => @milestone.milestone_effective_date,
+            :completed => @milestone.completed?,
+            :overdue => @milestone.overdue?,
+            :at_risk => @milestone.at_risk?(@totals),
+            :totals => @totals,
+            :versions => @milestone.versions.map do |v|
+              {
+                :id => v.id,
+                :name => v.name,
+                :status => v.status,
+                :effective_date => v.effective_date,
+                :completed_percent => v.completed_percent,
+                :closed_percent => v.closed_percent,
+                :estimated_hours => v.estimated_hours,
+                :spent_hours => v.spent_hours,
+                :rest_hours => v.rest_hours
+              }
+            end
+          }
+        }
+      end
+      format.csv do
+        csv_data = generate_milestone_csv(@milestone, @totals)
+        send_data csv_data, :type => 'text/csv; header=present', :filename => "milestone-#{@milestone.id}-#{Date.today}.csv"
+      end
+    end
   end
 
   def new
@@ -108,35 +175,37 @@ class MilestonesController < ApplicationController
   end
 
   def total_graph
-    if Object.const_defined?(:Magick)
-      g = Gruff::Pie.new(params[:size] || '500x400')
-      g.hide_title = true
-      g.theme = graph_theme
-      g.margins = 0
-
-      versions = params[:versions] || []
-      percentajes = params[:percentajes] || []
-      i = 0
-      while i < versions.size and i < percentajes.size
-        percentajes[i] = percentajes[i].to_f
-        g.data(versions[i], percentajes[i])
-        i += 1
-      end
-
-      headers['Content-Type'] = 'image/png'
-      send_data(g.to_blob, :type => 'image/png', :disposition => 'inline')
-    end
+    # Fallback to redirect or 204
+    head :no_content
   end
 
 private
 
-  def graph_theme
-    {
-      :colors => ['#DB2626', '#6A6ADB', '#64D564', '#F727F7', '#EBEB20', '#303030', '#12ABAD',
-                  '#808080', '#B7580B', '#316211'],
-      :marker_color => '#AAAAAA',
-      :background_colors => ['#FFFFFF', '#FFFFFF']
-    }
+  def generate_milestone_csv(milestone, totals)
+    CSV.generate(headers: true) do |csv|
+      csv << ['Milestone', milestone.name]
+      csv << ['Project', milestone.project.name]
+      csv << ['Due Date', milestone.milestone_effective_date]
+      csv << ['Status', milestone.completed? ? 'Closed' : (milestone.overdue? ? 'Overdue' : 'Open')]
+      csv << ['Completion %', "#{totals[:completed_pourcent]}%"]
+      csv << ['Total Estimated Hours', totals[:estimated_hours]]
+      csv << ['Total Spent Hours', totals[:spent_hours]]
+      csv << ['Total Remaining Hours', totals[:rest_hours]]
+      csv << ['Parallel Remaining Hours', totals[:parallel_rest_hours]]
+      csv << []
+      csv << ['Version', 'Status', 'Effective Date', 'Completion %', 'Estimated Hours', 'Spent Hours', 'Remaining Hours']
+      milestone.versions.each do |v|
+        csv << [
+          v.name,
+          v.status,
+          v.effective_date,
+          "#{v.completed_percent}%",
+          v.estimated_hours,
+          v.spent_hours,
+          v.rest_hours
+        ]
+      end
+    end
   end
 
 end

@@ -1,9 +1,14 @@
 <div class="contextual">
+  <%= link_to('CSV', milestone_path(@milestone, :format => :csv), :class => 'icon icon-exp-csv', :style => 'margin-right:10px;') %>
+  <%= link_to('JSON', milestone_path(@milestone, :format => :json), :class => 'icon icon-attachment', :style => 'margin-right:10px;') %>
   <%= link_to(l(:button_edit), edit_milestone_path(@milestone),
               :class => 'icon icon-edit') if User.current.allowed_to?(:manage_milestones, @project) %>
 </div>
 
-<h2><%= h(@milestone.name) %></h2>
+<h2>
+  <%= h(@milestone.name) %>
+  <%= @milestone.status_badge %>
+</h2>
 
 <% if @milestone.completed? %>
   <p><%= format_date(@milestone.milestone_effective_date) %></p>
@@ -13,6 +18,11 @@
       <%= due_date_distance_in_words(@milestone.milestone_effective_date) %>
     </strong>
     (<%= format_date(@milestone.milestone_effective_date) %>)
+    <% if @milestone.at_risk?(@totals) %>
+      <span style="color:#d9534f;font-weight:bold;margin-left:8px;">
+        ⚠️ <%= l(:label_milestone_at_risk_warning, :default => 'Forecasted delivery exceeds milestone due date!') %>
+      </span>
+    <% end %>
   </p>
 <% end %>
 
@@ -40,7 +50,10 @@
 <% content_for :sidebar do %>
 <h3><%= label_milestone_plural %></h3>
 <% @milestone.project.milestones.sort.each do |milestone| %>
-<%= link_to milestone.name, :controller => :milestones, :action => :show, :id => milestone.id %><br />
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+  <%= link_to milestone.name, :controller => :milestones, :action => :show, :id => milestone.id %>
+  <%= milestone.status_badge %>
+</div>
 <% end %>
 <h3><%= l(:label_version_plural) %></h3>
 <%= link_to(l(:label_total), '#total') %><br />
@@ -48,13 +61,3 @@
 <%= link_to format_version_name(version), "##{version.name}" %><br />
 <% end %>
 <% end %>
-
-<% html_title(l(:label_roadmap)) %>
-
-<%- if Redmine::VERSION::STRING < '3.4.0' -%>
-  <%= context_menu issues_context_menu_path %>
-<%- else -%>
-  <%= context_menu %>
-<%- end -%>
-
-<%= render :partial => 'common/advanced_roadmap_footer' %>
