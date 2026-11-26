@@ -7,8 +7,20 @@
 <p>
   <label><%= l(:label_setting_parallel_effort_custom_field) %>:</label>
   <%= select_tag('settings[parallel_effort_custom_field]', version_custom_field_options) %>
+  <%= link_to l(:label_custom_field_new),
+              new_custom_field_path(type: 'VersionCustomField', custom_field: { field_format: 'float', is_for_all: 1 }),
+              class: 'icon icon-add',
+              style: 'margin-left: 8px;',
+              target: '_blank' %>
   <br />
-  <em><%= l(:label_parallel_effort_hint) %></em>
+  <em>
+    <%= l(:label_parallel_effort_hint) %>
+    <% if version_custom_fields.empty? %>
+      <span style="display: block; color: var(--color-warning-text, #b06000); margin-top: 4px;">
+        <%= l(:label_no_data) %> — <%= link_to l(:label_custom_field_new), new_custom_field_path(type: 'VersionCustomField', custom_field: { field_format: 'float', is_for_all: 1 }), target: '_blank' %> (Type: Version, Format: Float).
+      </span>
+    <% end %>
+  </em>
 </p>
 
 <p>
